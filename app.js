@@ -1,7 +1,8 @@
 const express = require('express')
 const lunr = require('lunr')
-const Mustache = require('mustache')
 const fs = require('fs')
+
+const view = require('./views/results')
 
 const app = express()
 
@@ -126,74 +127,38 @@ const sanitize_input = function(req) {
 }
 
 const format_results = function(terms, results, results_length, this_start_index, next_start_index, page_number, pages, url) {
-  let template = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>F-Droid search results</title>
-  <link rel="shortcut icon" href="/favicon.png" />
-  <link rel="stylesheet" type="text/css" href="/css/style.css" />
-</head>
-<body>
-  <div id="search-form">
-    <form action="/">
-      <input name="q" type="text" autocomplete="off" value="{{terms}}" />
-      <input type="submit" value="Search" />
-    </form>
-  </div>`
+  let data = {
+    form: {
+      terms
+    },
+    results: {
+      packages  : results
+    },
+    pagination: {
+      status    : ((results_length) ? `${page_number} of ${pages}` : 'no results'),
+      prev_class: ((this_start_index === 0) ? 'disabled' : ''),
+      prev_url  : ((this_start_index === 0) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number - 1}`),
+      next_class: ((next_start_index === results_length) ? 'disabled' : ''),
+      next_url  : ((next_start_index === results_length) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number + 1}`)
+    }
+  }
+
+  let html = ''
+
+  html += view.render("header")
+  html += view.render("search-form",         data.form)
 
   if (results_length) {
-    template += `
-  <div id="search-results">
-    {{#packages}}
-    <div class="package-header search-result">
-      <img class="package-icon" src="{{ icon_url }}">
-
-      <div class="package-info">
-        <h4 class="package-name">
-          <a href="https://f-droid.org/packages/{{packageName}}/" target="_blank">
-            {{ name }}
-          </a>
-        </h4>
-
-        <div class="package-desc">
-          <span class="package-summary">{{ summary }}</span>
-        </div>
-      </div>
-    </div>
-    {{/packages}}
-  </div>
-  <div id="search-pagination">
-    <a id="prev-page" class="{{prev_class}}" href="{{prev_url}}">&lt;</a>
-    <div id="search-pagination-status"><span>{{status}}</span></div>
-    <a id="next-page" class="{{next_class}}" href="{{next_url}}">&gt;</a>
-  </div>`
+    html += view.render("search-results",    data.results)
+    html += view.render("search-pagination", data.pagination)
   }
   else if (terms) {
-    template += `
-  <div id="search-pagination">
-    <a id="prev-page" class="{{prev_class}}" href="{{prev_url}}">&lt;</a>
-    <div id="search-pagination-status"><span>{{status}}</span></div>
-    <a id="next-page" class="{{next_class}}" href="{{next_url}}">&gt;</a>
-  </div>`
+    html += view.render("search-pagination", data.pagination)
   }
 
-  template += `
-</body>
-</html>
-`
+  html += view.render("footer")
 
-  let view = {
-    terms,
-    packages  : results,
-    status    : ((results_length) ? `${page_number} of ${pages}` : 'no results'),
-    prev_class: ((this_start_index === 0) ? 'disabled' : ''),
-    prev_url  : ((this_start_index === 0) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number - 1}`),
-    next_class: ((next_start_index === results_length) ? 'disabled' : ''),
-    next_url  : ((next_start_index === results_length) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number + 1}`)
-  }
-
-  return Mustache.render(template, view)
+  return html
 }
 
 const format_empty_results = function(terms) {
