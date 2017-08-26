@@ -121,7 +121,7 @@ const sanitize_input = function(req) {
   return [terms, minChars, results_per_page, page_number]
 }
 
-const format_results = function(results, results_length, this_start_index, next_start_index, page_number, pages, url) {
+const format_results = function(terms, results, results_length, this_start_index, next_start_index, page_number, pages, url) {
   let template = `<!DOCTYPE html>
 <html>
 <head>
@@ -131,6 +131,15 @@ const format_results = function(results, results_length, this_start_index, next_
   <link rel="stylesheet" type="text/css" href="/css/style.css" />
 </head>
 <body>
+  <div id="search-form">
+    <form action="/">
+      <input name="q" type="text" autocomplete="off" value="{{terms}}" />
+      <input type="submit" value="Search" />
+    </form>
+  </div>`
+
+  if (results_length) {
+    template += `
   <div id="search-results">
     {{#packages}}
     <div class="package-header search-result">
@@ -154,21 +163,37 @@ const format_results = function(results, results_length, this_start_index, next_
     <a id="prev-page" class="{{prev_class}}" href="{{prev_url}}">&lt;</a>
     <div id="search-pagination-status"><span>{{status}}</span></div>
     <a id="next-page" class="{{next_class}}" href="{{next_url}}">&gt;</a>
-  </div>
+  </div>`
+  }
+  else if (terms) {
+    template += `
+  <div id="search-pagination">
+    <a id="prev-page" class="{{prev_class}}" href="{{prev_url}}">&lt;</a>
+    <div id="search-pagination-status"><span>{{status}}</span></div>
+    <a id="next-page" class="{{next_class}}" href="{{next_url}}">&gt;</a>
+  </div>`
+  }
+
+  template += `
 </body>
 </html>
 `
 
   let view = {
+    terms,
     packages  : results,
-    status    : `${page_number} of ${pages}`,
+    status    : ((results_length) ? `${page_number} of ${pages}` : 'no results'),
     prev_class: ((this_start_index === 0) ? 'disabled' : ''),
     prev_url  : ((this_start_index === 0) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number - 1}`),
     next_class: ((next_start_index === results_length) ? 'disabled' : ''),
-    next_url  : ((next_start_index === results_length) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number + 1}`),
+    next_url  : ((next_start_index === results_length) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number + 1}`)
   }
 
   return Mustache.render(template, view)
+}
+
+const format_empty_results = function(terms) {
+  return format_results(terms, [], 0, 0, 0, 0, 0, '')
 }
 
 app.use(function(req, res) {
@@ -190,6 +215,12 @@ app.use(function(req, res) {
     results = index.search(terms + "*")
     pages   = Math.ceil(results.length / results_per_page)
 
+    if (pages === 0) {
+      let html_response = format_empty_results(terms)
+      res.status(200).send(html_response)
+      return
+    }
+
     if ((page_number < 1) || (page_number > pages)) {
       res.status(400).send(`Page number is not valid. Specified search terms produce ${pages} pages of results.`)
       return
@@ -208,11 +239,12 @@ app.use(function(req, res) {
       return packages[item.ref]
     })
 
-    let html_response = format_results(results, results_length, this_start_index, next_start_index, page_number, pages, req.originalUrl)
+    let html_response = format_results(terms, results, results_length, this_start_index, next_start_index, page_number, pages, req.originalUrl)
     res.status(200).send(html_response)
   }
   else {
-    res.status(400).send('Please specify your search terms')
+    let html_response = format_empty_results('')
+    res.status(200).send(html_response)
   }
 })
 
