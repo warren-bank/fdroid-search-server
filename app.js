@@ -22,6 +22,8 @@ app.use(function(req, res, next) {
 
 app.use(express.static(`${__dirname}/public/allow-CORS`, {
   index: false,
+  cacheControl: true,
+  maxAge: '30d',
   setHeaders: function(res, path, stat) {
     res.set({
       'Access-Control-Allow-Origin': 'f-droid.org'
@@ -30,7 +32,9 @@ app.use(express.static(`${__dirname}/public/allow-CORS`, {
 }))
 
 app.use(express.static(`${__dirname}/public/deny-CORS`, {
-  index: false
+  index: false,
+  cacheControl: true,
+  maxAge: '30d'
 }))
 
 var   Lunr_index_cache, Lunr_index_timestamp

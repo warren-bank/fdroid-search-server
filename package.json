@@ -1,7 +1,7 @@
 {
   "name": "@warren-bank/fdroid-search-server",
   "description": "Node.js Express server to perform Lunr search using index built from F-Droid.org",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "scripts": {
     "start": "sudo node bin/start_http.js",
     "http":  "sudo node bin/start_http.js",
