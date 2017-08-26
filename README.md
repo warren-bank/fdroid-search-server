@@ -5,6 +5,7 @@
 ```bash
 git clone "https://github.com/warren-bank/fdroid-search-server.git"
 cd "fdroid-search-server"
+npm install
 
 # ----------------------------------------------------------------------
 # https://www.w3.org/Daemon/User/Installation/PrivilegedPorts.html
