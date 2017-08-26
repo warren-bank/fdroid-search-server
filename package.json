@@ -1,0 +1,29 @@
+{
+  "name": "@warren-bank/fdroid-search-server",
+  "description": "Node.js Express server to perform Lunr search using index built from F-Droid.org",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "sudo node bin/start_http.js",
+    "http":  "sudo node bin/start_http.js",
+    "https": "sudo node bin/start_https.js"
+  },
+  "dependencies": {
+    "express": "^4.15.4",
+    "lunr": "2.0.4",
+    "mustache": "^2.3.0"
+  },
+  "license": "GPL-2.0",
+  "author": {
+    "name": "Warren R. Bank",
+    "email": "warren.r.bank@gmail.com",
+    "url": "https://github.com/warren-bank"
+  },
+  "homepage": "https://github.com/warren-bank/fdroid-search-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/warren-bank/fdroid-search-server"
+  },
+  "bugs": {
+    "url": "https://github.com/warren-bank/fdroid-search-server/issues"
+  }
+}
