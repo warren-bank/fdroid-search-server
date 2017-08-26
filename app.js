@@ -138,7 +138,7 @@ const format_results = function(results, results_length, this_start_index, next_
 
       <div class="package-info">
         <h4 class="package-name">
-          <a href="https://f-droid.org/packages/{{packageName}}/">
+          <a href="https://f-droid.org/packages/{{packageName}}/" target="_blank">
             {{ name }}
           </a>
         </h4>
