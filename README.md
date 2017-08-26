@@ -61,7 +61,6 @@ npm run https
 
 * the search results are only as good as the Lunr index
 * I've noticed a lot of missing packages that should occur in the results.. but don't
-* this project uses the Lunr index on f-droid's staging server,<br>so the search results should improve as this index gets better
 
 #### Related Links:
 
