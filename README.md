@@ -1,12 +1,16 @@
 ### [fdroid-search-server](https://github.com/warren-bank/fdroid-search-server)
 
-## Installation and Usage:
+#### How to: Install:
 
 ```bash
 git clone "https://github.com/warren-bank/fdroid-search-server.git"
 cd "fdroid-search-server"
 npm install
+```
 
+#### How to: Run the server(s):
+
+```bash
 # ----------------------------------------------------------------------
 # https://www.w3.org/Daemon/User/Installation/PrivilegedPorts.html
 #
@@ -23,6 +27,19 @@ npm install
 npm run http
 npm run https
 ```
+
+#### How to: Query the server(s) with a web client:
+
+* HTTP
+  * [query: "alarm clock"](http://localhost/?q=alarm%20clock)
+* HTTPS
+  * [query: "alarm clock"](https://localhost/?q=alarm%20clock)
+
+notes:
+* the SSL certificate that is included in this repo is self-signed
+  * its passphrase is: "f-droid"
+* web browsers will identify it as being insecure,<br>because it isn't signed by a well-known trusted authority
+* if this were ever used in production, the certificate would need to be replaced
 
 #### Background:
 
