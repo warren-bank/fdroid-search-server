@@ -6,13 +6,16 @@ const view = require('./views/results')
 
 const app = express()
 
-// --------------------------------------------------
+// ------------------------------------------------------------
+// serve static files:
+
+// ========================================
 // cache-busting for all static files
 //
 // example:
 //     /SHA1-index.json
 //  => /index.json
-// --------------------------------------------------
+// ========================================
 const SHA1_URL_search_pattern  = new RegExp('^(.*/)[0-9a-zA-Z]{40}-([^/]+)$')
 const SHA1_URL_replace_pattern = '$1$2'
 
@@ -38,6 +41,9 @@ app.use(express.static(`${__dirname}/public/deny-CORS`, {
   maxAge: '30d'
 }))
 
+// ------------------------------------------------------------
+// serve search results:
+
 var   Lunr_index_cache, Lunr_index_timestamp
 const Lunr_index_path       = `${__dirname}/public/allow-CORS/index.json`
 const Lunr_index_lifespan   = 1000 * 60 * 60  // (1000 ms/sec)(60 sec/min)(60 min/hr) = 1 hour
@@ -57,6 +63,7 @@ const Lunr_index_update     = function() {
     }
   }
 }
+
 const Lunr_index_postupdate = function() {
   Lunr_index_cache = JSON.parse(Lunr_index_cache)
 
@@ -126,45 +133,6 @@ const sanitize_input = function(req) {
   return [terms, minChars, results_per_page, page_number]
 }
 
-const format_results = function(terms, results, results_length, this_start_index, next_start_index, page_number, pages, url) {
-  let data = {
-    form: {
-      terms
-    },
-    results: {
-      packages  : results
-    },
-    pagination: {
-      status    : ((results_length) ? `${page_number} of ${pages}` : 'no results'),
-      prev_class: ((this_start_index === 0) ? 'disabled' : ''),
-      prev_url  : ((this_start_index === 0) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number - 1}`),
-      next_class: ((next_start_index === results_length) ? 'disabled' : ''),
-      next_url  : ((next_start_index === results_length) ? '' : `${url.replace(/&page=\d+$/, '')}&page=${page_number + 1}`)
-    }
-  }
-
-  let html = ''
-
-  html += view.render("header")
-  html += view.render("search-form",         data.form)
-
-  if (results_length) {
-    html += view.render("search-results",    data.results)
-    html += view.render("search-pagination", data.pagination)
-  }
-  else if (terms) {
-    html += view.render("search-pagination", data.pagination)
-  }
-
-  html += view.render("footer")
-
-  return html
-}
-
-const format_empty_results = function(terms) {
-  return format_results(terms, [], 0, 0, 0, 0, 0, '')
-}
-
 app.use(function(req, res) {
   let [terms, minChars, results_per_page, page_number] = sanitize_input(req)
 
@@ -185,7 +153,7 @@ app.use(function(req, res) {
     pages   = Math.ceil(results.length / results_per_page)
 
     if (pages === 0) {
-      let html_response = format_empty_results(terms)
+      let html_response = view.render_without_results(terms)
       res.status(200).send(html_response)
       return
     }
@@ -208,13 +176,25 @@ app.use(function(req, res) {
       return packages[item.ref]
     })
 
-    let html_response = format_results(terms, results, results_length, this_start_index, next_start_index, page_number, pages, req.originalUrl)
+    let html_response = view.render({
+      terms,
+      results,
+      count_total_results: results_length,
+      this_start_index,
+      next_start_index,
+      page_number,
+      count_total_pages: pages,
+      url: req.originalUrl
+    })
+
     res.status(200).send(html_response)
   }
   else {
-    let html_response = format_empty_results('')
+    let html_response = view.render_without_results('')
     res.status(200).send(html_response)
   }
 })
+
+// ------------------------------------------------------------
 
 module.exports = app
